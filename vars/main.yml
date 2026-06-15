@@ -1,0 +1,24 @@
+#Repertoire installation binaire
+repInstall: /data/bin/WebSphere-MQ-{{ version_MQ }}
+repInstall_linux: /data/bin/WebSphere-MQ-{{ version_MQ }}
+
+
+#Repertoire data, QMGR et conf SSL
+repConfig: /data/mq/conf
+repSSL: /data/mq/SSL
+reptem: /data/tmp
+
+#Repertoire logs
+repLOG: /data/logs
+repLog: /data/logs
+
+version_MQ: 9.4.0.5
+
+#Nombre de fichier de log primaire
+ctrmqm_lp: 4
+
+#Nombre de fichier de log secondaire
+ctrmqm_ls: 8
+
+#Taille de la page de fichier de log
+ctrmqm_lf: 4096
