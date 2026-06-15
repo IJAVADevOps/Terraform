@@ -1,0 +1,119 @@
+- name: Check if RPM base are installed
+  shell: "rpm -qa | grep MQSeries* | wc -l"
+  register: rpm_installed
+  ignore_errors: true
+  failed_when: rpm_installed.rc == 2
+
+
+- name: download mq binairies
+  get_url:
+    url: "https://nexusdev.{{ WORKLOAD }}.toto/repository/repo-aws-binaries/intercope/{{ version_MQ }}-IBM-MQ-Server-LinuxX64.tar"
+    validate_certs: False
+    dest: /{{ fsmq }}/tmp
+  async: 450
+  poll: 5
+  when:  rpm_installed.stdout|int == 0
+
+- name: Unarchive {{ version_MQ }}-IBM-MQ-Server-LinuxX64.tar
+  unarchive:
+    src: /{{ fsmq }}/tmp/{{ version_MQ }}-IBM-MQ-Server-LinuxX64.tar
+    dest: /{{ fsmq }}/tmp
+    remote_src: yes
+  when: rpm_installed.stdout|int == 0
+  tags: unarchive_mq_targz_base
+
+- name: delete targz file after unarchive
+  file:
+    path: /{{ fsmq }}/tmp/{{ version_MQ }}-IBM-MQ-Server-LinuxX64.tar
+    state: absent
+  when: rpm_installed.stdout|int == 0
+  tags: remove_targz_file_base
+
+- name: Execute the script mqlicense.sh
+  shell: "./mqlicense.sh -accept"
+  register: debug1
+  args:
+    chdir: "/{{ fsmq }}/tmp/MQServer/"
+    executable: "/bin/bash"
+  when: rpm_installed.stdout|int == 0
+  tags: install_all_mq_rpm
+
+- name: debug the script mqlicense.sh
+  debug: msg="{{ debug1.stdout }}"
+  when: rpm_installed.stdout|int == 0
+  tags: install_all_mq_rpm
+
+- name: Install MQ base
+  shell: "rpm --prefix {{ repInstall_linux }} -ivh MQSeriesRuntime-*.rpm MQSeriesServer-*.rpm MQSeriesSDK-*.rpm MQSeriesClient-*.rpm MQSeriesMan-*.rpm MQSeriesSamples-*.rpm MQSeriesJava-*.rpm MQSeriesJRE-*.rpm MQSeriesGSKit-*.rpm MQSeriesMsg_fr-*.rpm"
+  register: debugx
+  args:
+    chdir: "/{{ fsmq }}/tmp/MQServer/"
+    executable: "/bin/bash"
+  when: rpm_installed.stdout|int == 0
+  tags: install_mq_base
+
+- name: debug Install base MQ
+  debug: msg="{{ debugx.stdout }}"
+  when: rpm_installed.stdout|int == 0
+  tags: install_mq_base
+
+- name: Clean binaries
+  shell: "rm -rf /{{ fsmq }}/tmp/*"
+  args:
+    executable: "/bin/bash"
+  when: rpm_installed.stdout|int == 0
+  tags: remove_targz_file_base
+
+
+- name: Declare installation 1 as primary install
+  shell: "./setmqinst -i -p {{ repInstall_linux }}"
+  register: debug2
+  args:
+    chdir: "{{ repInstall_linux }}/bin/"
+    executable: "/bin/bash"
+  tags: declare_installation_primary
+
+- name: debug declare installation 1 as primary install
+  debug: msg="{{ debug2.stdout }}"
+  tags: declare_installation_primary
+
+- name: touch .profile mqm file
+  file:
+    path: /home/mqm/.profile
+    state: touch
+    owner: mqm
+    group: mqm
+  tags: add_lines_mqm_profile
+
+- name: Add lines to /home/mqm/.profile file
+  lineinfile:
+    dest: /home/mqm/.profile
+    line: '{{ item }}'
+  with_items:
+    - "#"
+    - "## Varialble dans le home du user mqm"
+    - "#"
+    - "export MQ_INSTALLATION_PATH=/{{ fsmq }}/WebSphere-MQ-latest"
+    - ". $MQ_INSTALLATION_PATH/bin/setmqenv -s"
+  tags: add_lines_mqm_profile
+
+- name: touch .profile admmq file
+  file:
+    path: /home/admmq/.profile
+    state: touch
+    owner: mqm
+    group: mqm
+  tags: add_lines_mqm_profile
+
+- name: Add lines to /home/admmq/.profile file
+  lineinfile:
+    dest: /home/admmq/.profile
+    line: '{{ item }}'
+  with_items:
+    - "#"
+    - "## Varialble dans le home du user mqm"
+    - "#"
+    - "export MQ_INSTALLATION_PATH=/{{ fsmq }}/WebSphere-MQ-latest"
+    - ". $MQ_INSTALLATION_PATH/bin/setmqenv -s"
+  tags: add_lines_mqm_profile
+
