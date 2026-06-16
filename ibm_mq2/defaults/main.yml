@@ -1,0 +1,50 @@
+---
+# =====================================================================
+#  Variables par défaut (surchargeables via group_vars / host_vars)
+# =====================================================================
+
+# Racine du système de fichiers MQ.
+# Sert à construire les chemins /<fsmq>/tmp, /<fsmq>/bin, etc.
+fsmq: data
+
+# Version d'IBM MQ à installer
+version_MQ: "9.4.0.5"
+
+# ---------------------------------------------------------------------
+# Répertoires d'installation des binaires
+# ---------------------------------------------------------------------
+repInstall: "/{{ fsmq }}/bin/WebSphere-MQ-{{ version_MQ }}"
+repInstall_linux: "{{ repInstall }}"
+
+# Lien symbolique "latest" référencé dans les .profile des utilisateurs
+mq_latest_link: "/{{ fsmq }}/WebSphere-MQ-latest"
+
+# ---------------------------------------------------------------------
+# Répertoires data / conf / SSL / tmp / logs
+# ---------------------------------------------------------------------
+repConfig: "/{{ fsmq }}/mq/conf"
+repSSL: "/{{ fsmq }}/mq/SSL"
+reptmp: "/{{ fsmq }}/tmp"
+repLog: "/{{ fsmq }}/logs"
+
+# ---------------------------------------------------------------------
+# Paramètres de logs du gestionnaire de files (utilisés par crtmqm)
+# ---------------------------------------------------------------------
+ctrmqm_lp: 4       # Nombre de fichiers de log primaires
+ctrmqm_ls: 8       # Nombre de fichiers de log secondaires
+ctrmqm_lf: 4096    # Taille de la page de fichier de log
+
+# ---------------------------------------------------------------------
+# Dépôt Nexus contenant les binaires
+# ---------------------------------------------------------------------
+mq_nexus_base_url: "https://nexusdev.znp.toto/repository/repo-aws-binaries/intercope"
+mq_tarball: "{{ version_MQ }}-IBM-MQ-Server-LinuxX64.tar"
+mq_validate_certs: false
+
+# ---------------------------------------------------------------------
+# Utilisateurs / groupes MQ
+# ---------------------------------------------------------------------
+mq_group: mqm
+mq_users:
+  - mqm
+  - admmq

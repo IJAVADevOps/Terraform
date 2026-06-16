@@ -1,0 +1,6 @@
+#
+## Environnement IBM MQ — géré par Ansible (ne pas éditer à la main)
+## Rôle : ibm_mq — Version cible : {{ ibm_mq_version }}
+#
+export MQ_INSTALLATION_PATH={{ ibm_mq_symlink_latest }}
+. $MQ_INSTALLATION_PATH/bin/setmqenv -s

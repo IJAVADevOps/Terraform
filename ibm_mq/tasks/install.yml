@@ -1,0 +1,66 @@
+---
+# Acceptation de licence + installation relocalisée + vérification.
+
+- name: Accepter la licence IBM MQ
+  ansible.builtin.command:
+    cmd: "./{{ ibm_mq_license_script }} -accept"
+    chdir: "{{ ibm_mq_extract_dir }}/{{ ibm_mq_server_subdir }}"
+  register: ibm_mq_license_result
+  changed_when: ibm_mq_license_result.rc == 0
+  become: true
+  when: not ibm_mq_installed
+
+# rpm --prefix est requis pour une installation relocalisée IBM MQ
+# (dnf ne propage pas --prefix). On liste explicitement les RPM, dans l'ordre
+# des composants (Runtime en premier), plutôt qu'avec un glob non déterministe.
+- name: Localiser les fichiers RPM des composants demandés
+  ansible.builtin.find:
+    paths: "{{ ibm_mq_extract_dir }}/{{ ibm_mq_server_subdir }}"
+    patterns: "{{ item }}-*.rpm"
+  register: ibm_mq_rpm_find
+  loop: "{{ ibm_mq_components }}"
+  loop_control:
+    label: "{{ item }}"
+  when: not ibm_mq_installed
+
+- name: Construire la liste ordonnée des chemins RPM
+  ansible.builtin.set_fact:
+    ibm_mq_rpm_files: >-
+      {{ ibm_mq_rpm_find.results
+         | map(attribute='files') | flatten
+         | map(attribute='path') | list }}
+  when: not ibm_mq_installed
+
+- name: Vérifier que tous les composants demandés ont été trouvés
+  ansible.builtin.assert:
+    that:
+      - ibm_mq_rpm_files | length >= (ibm_mq_components | length)
+    fail_msg: >-
+      Certains RPM de composants sont introuvables dans l'archive
+      (trouvés : {{ ibm_mq_rpm_files | length }},
+      attendus : {{ ibm_mq_components | length }}).
+    quiet: true
+  when: not ibm_mq_installed
+
+# Justifié : rpm --prefix permet l'installation relocalisée requise par IBM MQ
+# pour la coexistence multi-versions. dnf/rpm_key ne propagent pas --prefix ;
+# command est donc l'option correcte et maîtrisée ici.
+- name: Installer IBM MQ à l'emplacement relocalisé  # noqa: command-instead-of-module
+  ansible.builtin.command:
+    cmd: >-
+      rpm --prefix {{ ibm_mq_install_dir }} -ivh
+      {{ ibm_mq_rpm_files | join(' ') }}
+  register: ibm_mq_install_result
+  changed_when: ibm_mq_install_result.rc == 0
+  become: true
+  when:
+    - not ibm_mq_installed
+    - ibm_mq_rpm_files | length > 0
+
+- name: Vérifier la version installée (dspmqver)
+  ansible.builtin.command:
+    cmd: "{{ ibm_mq_install_dir }}/bin/dspmqver -f 2"
+  register: ibm_mq_dspmqver
+  changed_when: false
+  failed_when: ibm_mq_version.split('.')[0:3] | join('.') not in ibm_mq_dspmqver.stdout
+  become: true

@@ -1,0 +1,12 @@
+---
+# Nettoyage sûr du répertoire d'extraction (pas de rm -rf en shell).
+
+- name: Supprimer le répertoire d'extraction temporaire
+  ansible.builtin.file:
+    path: "{{ ibm_mq_extract_dir }}"
+    state: absent
+  become: true
+  when:
+    - ibm_mq_cleanup | bool
+    - ibm_mq_extract_dir is match('^/.+')
+    - ibm_mq_extract_dir is not match('^/+$')

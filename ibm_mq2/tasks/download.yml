@@ -1,0 +1,33 @@
+---
+# =====================================================================
+#  Téléchargement et décompression des binaires
+# =====================================================================
+
+- name: Créer le répertoire temporaire {{ reptmp }}
+  ansible.builtin.file:
+    path: "{{ reptmp }}"
+    state: directory
+    owner: "{{ mq_group }}"
+    group: "{{ mq_group }}"
+    mode: "0755"
+
+- name: Télécharger l'archive IBM MQ {{ version_MQ }}
+  ansible.builtin.get_url:
+    url: "{{ mq_nexus_base_url }}/{{ mq_tarball }}"
+    dest: "{{ reptmp }}/{{ mq_tarball }}"
+    validate_certs: "{{ mq_validate_certs }}"
+    mode: "0644"
+  async: 450
+  poll: 5
+
+- name: Décompresser l'archive {{ mq_tarball }}
+  ansible.builtin.unarchive:
+    src: "{{ reptmp }}/{{ mq_tarball }}"
+    dest: "{{ reptmp }}"
+    remote_src: true
+    creates: "{{ reptmp }}/MQServer/mqlicense.sh"
+
+- name: Supprimer l'archive après décompression
+  ansible.builtin.file:
+    path: "{{ reptmp }}/{{ mq_tarball }}"
+    state: absent

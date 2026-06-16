@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# Limites système recommandées pour IBM MQ (utilisateur mqm)
+mqm  soft  nofile  {{ ibm_mq_nofile_soft }}
+mqm  hard  nofile  {{ ibm_mq_nofile_hard }}
+mqm  soft  nproc   {{ ibm_mq_nproc_soft }}
+mqm  hard  nproc   {{ ibm_mq_nproc_hard }}

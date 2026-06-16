@@ -1,0 +1,14 @@
+---
+# Déploiement idempotent du profil d'environnement MQ (remplace lineinfile/touch).
+
+- name: Déployer le profil d'environnement MQ
+  ansible.builtin.template:
+    src: profile.j2
+    dest: "/home/{{ item.name }}/.profile"
+    owner: "{{ item.name }}"
+    group: "{{ item.group }}"
+    mode: "0644"
+  loop: "{{ ibm_mq_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true

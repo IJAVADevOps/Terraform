@@ -1,0 +1,32 @@
+---
+# =====================================================================
+#  Vérifications préalables
+# =====================================================================
+
+- name: Vérifier que le système est de la famille Red Hat
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "RedHat"
+    fail_msg: "Ce rôle ne supporte que Red Hat / RHEL (détecté : {{ ansible_os_family }})."
+    success_msg: "Système Red Hat détecté : {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+- name: Compter les paquets RPM IBM MQ déjà installés
+  ansible.builtin.shell: |
+    set -o pipefail
+    rpm -qa | grep -c '^MQSeries' || true
+  args:
+    executable: /bin/bash
+  register: rpm_installed
+  changed_when: false
+  check_mode: false
+
+- name: Définir le fait mq_already_installed
+  ansible.builtin.set_fact:
+    mq_already_installed: "{{ (rpm_installed.stdout | int) > 0 }}"
+
+- name: Afficher l'état de l'installation
+  ansible.builtin.debug:
+    msg: >-
+      IBM MQ {{ 'est déjà installé (' ~ rpm_installed.stdout ~ ' paquet(s) détecté(s)) : étapes de téléchargement/installation ignorées'
+      if mq_already_installed
+      else 'n''est pas installé : installation de la version ' ~ version_MQ }}

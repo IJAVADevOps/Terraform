@@ -1,0 +1,16 @@
+---
+# Création des répertoires fonctionnels avec les droits mqm.
+
+- name: Créer les répertoires fonctionnels MQ
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: mqm
+    group: mqm
+    mode: "0775"
+  loop:
+    - "{{ ibm_mq_fs_root }}/bin"
+    - "{{ ibm_mq_config_dir }}"
+    - "{{ ibm_mq_ssl_dir }}"
+    - "{{ ibm_mq_log_dir }}"
+  become: true

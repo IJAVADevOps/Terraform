@@ -1,0 +1,13 @@
+---
+# =============================================================================
+# vars/main.yml — constantes internes (NON surchargeables par l'appelant)
+# =============================================================================
+
+# Motif d'identification des paquets IBM MQ déjà installés.
+ibm_mq_rpm_match: "^MQSeries"
+
+# Sous-répertoire produit par l'extraction de l'archive IBM MQ.
+ibm_mq_server_subdir: "MQServer"
+
+# Script d'acceptation de licence fourni dans l'archive.
+ibm_mq_license_script: "mqlicense.sh"

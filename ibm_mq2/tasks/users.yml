@@ -1,0 +1,18 @@
+---
+# =====================================================================
+#  Utilisateurs et groupes MQ
+# =====================================================================
+
+- name: Créer le groupe {{ mq_group }}
+  ansible.builtin.group:
+    name: "{{ mq_group }}"
+    state: present
+
+- name: Créer les utilisateurs MQ
+  ansible.builtin.user:
+    name: "{{ item }}"
+    group: "{{ mq_group }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+  loop: "{{ mq_users }}"

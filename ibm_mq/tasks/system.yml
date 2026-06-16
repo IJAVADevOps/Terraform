@@ -1,0 +1,30 @@
+---
+# Prérequis système : dépendances OS, limites, SELinux.
+
+- name: Installer les dépendances système IBM MQ
+  ansible.builtin.dnf:
+    name: "{{ ibm_mq_os_dependencies }}"
+    state: present
+  become: true
+
+- name: Configurer les limites système (nofile / nproc) pour mqm
+  ansible.builtin.template:
+    src: limits-mqm.conf.j2
+    dest: /etc/security/limits.d/99-mqm.conf
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Gérer le contexte SELinux de l'arborescence MQ
+  when:
+    - ibm_mq_manage_selinux | bool
+    - ansible_facts['selinux']['status'] | default('disabled') == "enabled"
+  become: true
+  block:
+    - name: Déclarer le contexte SELinux de la racine MQ
+      community.general.sefcontext:
+        target: "{{ ibm_mq_fs_root }}(/.*)?"
+        setype: "{{ ibm_mq_selinux_setype }}"
+        state: present
+      notify: Restaurer les contextes SELinux MQ

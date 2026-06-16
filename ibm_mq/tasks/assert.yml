@@ -1,0 +1,54 @@
+---
+# Validation fail-fast des variables obligatoires.
+
+- name: Vérifier les variables d'emplacement et de version
+  ansible.builtin.assert:
+    that:
+      - ibm_mq_version is defined and ibm_mq_version | length > 0
+      - ibm_mq_fs_root is defined
+      - ibm_mq_fs_root is match('^/.+')
+      - ibm_mq_fs_root is not match('^/+$')
+      - ibm_mq_install_dir is match('^/.+')
+      - ibm_mq_tmp_dir is match('^/.+')
+      - ibm_mq_extract_dir is match('^/.+')
+      - ibm_mq_extract_dir is not match('^/+$')
+    fail_msg: >-
+      Variables d'emplacement invalides : vérifiez ibm_mq_version,
+      ibm_mq_fs_root et les chemins dérivés (doivent être des chemins absolus).
+    quiet: true
+
+- name: Vérifier la configuration de téléchargement
+  ansible.builtin.assert:
+    that:
+      - ibm_mq_nexus_base_url is match('^https://')
+      - ibm_mq_archive_name | length > 0
+      - ibm_mq_archive_sha256 is defined
+      - ibm_mq_archive_sha256 != "REMPLACER_PAR_LE_SHA256_REEL"
+      - ibm_mq_archive_sha256 | length == 64
+    fail_msg: >-
+      Configuration de téléchargement invalide : l'URL Nexus doit être en HTTPS
+      et ibm_mq_archive_sha256 doit contenir le SHA-256 réel (64 caractères).
+    quiet: true
+
+- name: Vérifier la liste des composants et les UID/GID
+  ansible.builtin.assert:
+    that:
+      - ibm_mq_components | length > 0
+      - "'MQSeriesRuntime' in ibm_mq_components"
+      - ibm_mq_mqm_uid | int > 0
+      - ibm_mq_mqm_gid | int > 0
+    fail_msg: >-
+      Composants ou identifiants invalides : MQSeriesRuntime est obligatoire et
+      les UID/GID doivent être des entiers positifs.
+    quiet: true
+
+- name: Vérifier la distribution cible (RHEL 8 / 9)
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['os_family'] == "RedHat"
+      - ansible_facts['distribution_major_version'] in ["8", "9"]
+    fail_msg: >-
+      Ce rôle ne supporte que RHEL 8 et RHEL 9
+      (détecté : {{ ansible_facts['distribution'] }}
+      {{ ansible_facts['distribution_major_version'] }}).
+    quiet: true

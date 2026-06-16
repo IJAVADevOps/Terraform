@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  role_name: ibm_mq
+  namespace: znp
+  author: Équipe DevOps
+  description: Installation d'IBM MQ Server sur Red Hat / RHEL
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - ibmmq
+    - mq
+    - messaging
+    - middleware
+
+dependencies: []

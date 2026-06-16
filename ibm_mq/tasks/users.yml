@@ -1,0 +1,25 @@
+---
+# Création du groupe et des utilisateurs MQ avec UID/GID fixes.
+
+- name: Créer le groupe mqm
+  ansible.builtin.group:
+    name: mqm
+    gid: "{{ ibm_mq_mqm_gid }}"
+    state: present
+  become: true
+
+- name: Créer les utilisateurs MQ
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    group: "{{ item.group if item.primary else omit }}"
+    groups: "{{ [] if item.primary else [item.group] }}"
+    append: "{{ not item.primary }}"
+    home: "/home/{{ item.name }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+  loop: "{{ ibm_mq_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true

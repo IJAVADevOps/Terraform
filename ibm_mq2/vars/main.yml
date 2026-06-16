@@ -1,0 +1,18 @@
+---
+# =====================================================================
+#  Variables internes au rôle (non destinées à être surchargées)
+# =====================================================================
+
+# Liste ordonnée des paquets RPM IBM MQ à installer.
+# L'ordre est important : Runtime doit précéder les autres.
+mq_rpm_packages:
+  - MQSeriesRuntime
+  - MQSeriesServer
+  - MQSeriesSDK
+  - MQSeriesClient
+  - MQSeriesMan
+  - MQSeriesSamples
+  - MQSeriesJava
+  - MQSeriesJRE
+  - MQSeriesGSKit
+  - MQSeriesMsg_fr

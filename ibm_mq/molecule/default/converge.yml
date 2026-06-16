@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+  vars:
+    # En test, on ne télécharge pas réellement depuis Nexus : ces valeurs
+    # servent à valider la syntaxe et la logique. Surchargez-les avec un
+    # binaire et un checksum réels pour un test d'installation complet.
+    ibm_mq_archive_sha256: "{{ '0' * 64 }}"
+    ibm_mq_set_primary: false
+  tasks:
+    - name: Inclure le rôle ibm_mq
+      ansible.builtin.include_role:
+        name: ibm_mq

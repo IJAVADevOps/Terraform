@@ -1,0 +1,51 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Recollecter les paquets installés
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: Vérifier que les composants MQ requis sont présents
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.packages.keys() | select('match', '^MQSeries') | list | length > 0
+        fail_msg: "Aucun paquet MQSeries détecté."
+
+    - name: Vérifier l'existence de l'utilisateur mqm
+      ansible.builtin.command: id mqm
+      register: id_mqm
+      changed_when: false
+
+    - name: Vérifier l'existence de l'utilisateur admmq
+      ansible.builtin.command: id admmq
+      register: id_admmq
+      changed_when: false
+
+    - name: Vérifier le lien symbolique WebSphere-MQ-latest
+      ansible.builtin.stat:
+        path: /data/WebSphere-MQ-latest
+      register: mq_symlink
+
+    - name: Le lien doit exister et être un lien symbolique
+      ansible.builtin.assert:
+        that:
+          - mq_symlink.stat.exists
+          - mq_symlink.stat.islnk | default(false)
+        fail_msg: "Le lien WebSphere-MQ-latest est absent ou invalide."
+
+    - name: Vérifier le fichier de limites mqm
+      ansible.builtin.stat:
+        path: /etc/security/limits.d/99-mqm.conf
+      register: mq_limits
+
+    - name: Le fichier de limites doit exister
+      ansible.builtin.assert:
+        that:
+          - mq_limits.stat.exists
+        fail_msg: "Le fichier de limites mqm est absent."
+
+    - name: Vérifier le profil d'environnement mqm
+      ansible.builtin.command: grep -q "setmqenv -s" /home/mqm/.profile
+      changed_when: false

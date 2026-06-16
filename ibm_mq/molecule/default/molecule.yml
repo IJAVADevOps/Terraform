@@ -1,0 +1,57 @@
+---
+role_name_check: 1
+
+driver:
+  name: docker
+
+platforms:
+  - name: ibm_mq-rhel8
+    image: registry.access.redhat.com/ubi8/ubi-init:latest
+    command: /usr/sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+
+  - name: ibm_mq-rhel9
+    image: registry.access.redhat.com/ubi9/ubi-init:latest
+    command: /usr/sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+  inventory:
+    host_vars:
+      ibm_mq-rhel8:
+        ibm_mq_manage_selinux: false
+      ibm_mq-rhel9:
+        ibm_mq_manage_selinux: false
+
+verifier:
+  name: ansible
+
+scenario:
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - cleanup
+    - destroy

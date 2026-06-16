@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  role_name: ibm_mq
+  author: Équipe Middleware
+  description: >-
+    Installation relocalisée et industrialisée d'IBM MQ 9.4 sur
+    Red Hat Enterprise Linux 8 et 9 (idempotente, sécurisée, multi-versions).
+  company: ZNP
+  license: proprietary
+  min_ansible_version: "2.14"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - ibmmq
+    - messaging
+    - middleware
+    - rhel
+
+dependencies: []

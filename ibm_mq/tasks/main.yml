@@ -1,0 +1,44 @@
+---
+# =============================================================================
+# tasks/main.yml — orchestration du rôle ibm_mq
+# =============================================================================
+
+- name: Valider les variables et prérequis
+  ansible.builtin.import_tasks: assert.yml
+  tags: [always, ibm_mq_assert]
+
+- name: Collecter l'état du système (preflight)
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [always, ibm_mq_preflight]
+
+- name: Créer les groupes et utilisateurs MQ
+  ansible.builtin.import_tasks: users.yml
+  tags: [ibm_mq_users]
+
+- name: Préparer le système (dépendances, ulimits, SELinux)
+  ansible.builtin.import_tasks: system.yml
+  tags: [ibm_mq_system]
+
+- name: Créer les répertoires data / SSL / logs
+  ansible.builtin.import_tasks: directories.yml
+  tags: [ibm_mq_directories]
+
+- name: Télécharger et extraire les binaires
+  ansible.builtin.import_tasks: download.yml
+  tags: [ibm_mq_download]
+
+- name: Installer IBM MQ
+  ansible.builtin.import_tasks: install.yml
+  tags: [ibm_mq_install]
+
+- name: Déclarer l'installation primaire et le lien courant
+  ansible.builtin.import_tasks: primary.yml
+  tags: [ibm_mq_primary]
+
+- name: Configurer l'environnement utilisateur
+  ansible.builtin.import_tasks: environment.yml
+  tags: [ibm_mq_environment]
+
+- name: Nettoyer les fichiers temporaires
+  ansible.builtin.import_tasks: cleanup.yml
+  tags: [ibm_mq_cleanup]

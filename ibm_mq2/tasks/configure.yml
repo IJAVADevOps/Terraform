@@ -1,0 +1,59 @@
+---
+# =====================================================================
+#  Configuration : installation primaire, lien latest, répertoires,
+#  profils utilisateurs
+# =====================================================================
+
+- name: Récupérer l'état des installations MQ
+  ansible.builtin.command: "{{ repInstall_linux }}/bin/dspmqinst"
+  register: dspmqinst_out
+  changed_when: false
+  failed_when: false
+
+- name: Déclarer l'installation 1 comme installation primaire
+  ansible.builtin.command: ./setmqinst -i -p {{ repInstall_linux }}
+  args:
+    chdir: "{{ repInstall_linux }}/bin"
+  register: setmqinst_out
+  changed_when: true
+  when: not (dspmqinst_out.stdout | regex_search('Primary:\s+Yes'))
+
+- name: Afficher le résultat de setmqinst
+  ansible.builtin.debug:
+    var: setmqinst_out.stdout_lines
+  when: setmqinst_out is defined and setmqinst_out.stdout_lines is defined
+
+- name: Créer le lien symbolique {{ mq_latest_link }}
+  ansible.builtin.file:
+    src: "{{ repInstall_linux }}"
+    dest: "{{ mq_latest_link }}"
+    state: link
+    force: true
+
+- name: Créer les répertoires data / conf / SSL / logs
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ mq_group }}"
+    group: "{{ mq_group }}"
+    mode: "0755"
+  loop:
+    - "{{ repConfig }}"
+    - "{{ repSSL }}"
+    - "{{ repLog }}"
+
+- name: Configurer le .profile des utilisateurs MQ
+  ansible.builtin.blockinfile:
+    path: "/home/{{ item }}/.profile"
+    create: true
+    owner: "{{ item }}"
+    group: "{{ mq_group }}"
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - IBM MQ"
+    block: |
+      #
+      ## Variables dans le home du user {{ item }}
+      #
+      export MQ_INSTALLATION_PATH={{ mq_latest_link }}
+      . $MQ_INSTALLATION_PATH/bin/setmqenv -s
+  loop: "{{ mq_users }}"

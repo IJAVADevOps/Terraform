@@ -1,0 +1,33 @@
+---
+# =====================================================================
+#  Installation des paquets IBM MQ
+# =====================================================================
+
+- name: Accepter la licence IBM MQ (mqlicense.sh)
+  ansible.builtin.command: ./mqlicense.sh -accept
+  args:
+    chdir: "{{ reptmp }}/MQServer"
+  register: mqlicense_out
+  changed_when: true
+
+- name: Afficher le résultat de mqlicense.sh
+  ansible.builtin.debug:
+    var: mqlicense_out.stdout_lines
+
+- name: Installer les paquets RPM IBM MQ dans {{ repInstall_linux }}
+  ansible.builtin.shell: >-
+    rpm --prefix {{ repInstall_linux }} -ivh
+    {{ mq_rpm_packages | map('regex_replace', '$', '-*.rpm') | join(' ') }}
+  args:
+    chdir: "{{ reptmp }}/MQServer"
+  register: rpm_install_out
+  changed_when: "'already installed' not in rpm_install_out.stdout"
+
+- name: Afficher le résultat de l'installation des RPM
+  ansible.builtin.debug:
+    var: rpm_install_out.stdout_lines
+
+- name: Nettoyer les binaires extraits
+  ansible.builtin.file:
+    path: "{{ reptmp }}/MQServer"
+    state: absent

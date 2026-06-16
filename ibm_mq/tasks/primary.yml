@@ -1,0 +1,22 @@
+---
+# Installation primaire (optionnelle) et mise à jour du lien courant.
+
+- name: Déclarer l'installation comme primaire
+  ansible.builtin.command:
+    cmd: "{{ ibm_mq_install_dir }}/bin/setmqinst -i -p"
+  register: ibm_mq_setmqinst
+  changed_when: ibm_mq_setmqinst.rc == 0
+  become: true
+  when:
+    - ibm_mq_set_primary | bool
+    - not ibm_mq_installed
+
+- name: Pointer WebSphere-MQ-latest vers l'installation courante
+  ansible.builtin.file:
+    src: "{{ ibm_mq_install_dir }}"
+    dest: "{{ ibm_mq_symlink_latest }}"
+    state: link
+    force: true
+    follow: false
+  become: true
+  notify: Rafraîchir l'environnement MQ

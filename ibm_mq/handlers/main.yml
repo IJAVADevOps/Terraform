@@ -1,0 +1,13 @@
+---
+- name: Restaurer les contextes SELinux MQ
+  ansible.builtin.command:
+    cmd: "restorecon -R {{ ibm_mq_fs_root }}"
+  register: ibm_mq_restorecon
+  changed_when: false
+  become: true
+
+- name: Rafraîchir l'environnement MQ
+  ansible.builtin.debug:
+    msg: >-
+      Lien {{ ibm_mq_symlink_latest }} mis à jour vers {{ ibm_mq_install_dir }}.
+      Les sessions mqm/admmq existantes doivent recharger leur .profile.

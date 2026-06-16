@@ -1,0 +1,26 @@
+---
+# =====================================================================
+#  Rôle ibm_mq - point d'entrée
+# =====================================================================
+
+- name: Vérifications préalables
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [always]
+
+- name: Gestion des utilisateurs et groupes MQ
+  ansible.builtin.import_tasks: users.yml
+  tags: [mq_users]
+
+- name: Téléchargement et décompression des binaires
+  ansible.builtin.import_tasks: download.yml
+  when: not mq_already_installed
+  tags: [mq_download]
+
+- name: Installation des paquets IBM MQ
+  ansible.builtin.import_tasks: install.yml
+  when: not mq_already_installed
+  tags: [mq_install]
+
+- name: Configuration (installation primaire + profils)
+  ansible.builtin.import_tasks: configure.yml
+  tags: [mq_configure]

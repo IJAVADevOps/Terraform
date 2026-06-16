@@ -1,0 +1,18 @@
+---
+# Détection idempotente de l'état d'installation (remplace shell|grep|wc).
+
+- name: Collecter les paquets RPM installés
+  ansible.builtin.package_facts:
+    manager: rpm
+
+- name: Déterminer si IBM MQ est déjà installé
+  ansible.builtin.set_fact:
+    ibm_mq_installed: >-
+      {{ ansible_facts.packages.keys()
+         | select('match', ibm_mq_rpm_match)
+         | list | length > 0 }}
+
+- name: Tracer l'état d'installation détecté
+  ansible.builtin.debug:
+    msg: "IBM MQ déjà installé : {{ ibm_mq_installed }}"
+    verbosity: 1

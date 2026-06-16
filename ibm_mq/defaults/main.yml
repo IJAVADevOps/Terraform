@@ -1,0 +1,78 @@
+---
+# =============================================================================
+# defaults/main.yml — valeurs surchargeables par l'appelant
+# =============================================================================
+
+# --- Version & emplacements -------------------------------------------------
+ibm_mq_version: "9.4.0.5"
+
+# Racine du système de fichiers dédié à MQ (idéalement un point de montage).
+ibm_mq_fs_root: "/data"
+
+# Installation relocalisée (rpm --prefix). Une arborescence par version.
+ibm_mq_install_dir: "{{ ibm_mq_fs_root }}/bin/WebSphere-MQ-{{ ibm_mq_version }}"
+
+# Lien stable pointant vers l'installation courante (bascule de version).
+ibm_mq_symlink_latest: "{{ ibm_mq_fs_root }}/WebSphere-MQ-latest"
+
+# Répertoires données / SSL / logs / temporaire.
+ibm_mq_config_dir: "{{ ibm_mq_fs_root }}/mq/conf"
+ibm_mq_ssl_dir: "{{ ibm_mq_fs_root }}/mq/SSL"
+ibm_mq_log_dir: "{{ ibm_mq_fs_root }}/logs"
+ibm_mq_tmp_dir: "{{ ibm_mq_fs_root }}/tmp"
+ibm_mq_extract_dir: "{{ ibm_mq_tmp_dir }}/ibm_mq_install_{{ ibm_mq_version }}"
+
+# --- Téléchargement (Nexus) -------------------------------------------------
+ibm_mq_nexus_base_url: "https://nexusdev.znp.toto/repository/repo-aws-binaries/intercope"
+ibm_mq_archive_name: "{{ ibm_mq_version }}-IBM-MQ-Server-LinuxX64.tar"
+# SHA-256 attendu de l'archive (À RENSEIGNER — publié par votre pipeline/IBM).
+ibm_mq_archive_sha256: "REMPLACER_PAR_LE_SHA256_REEL"
+ibm_mq_download_timeout: 120
+
+# --- Composants à installer (uniquement le nécessaire en prod serveur) ------
+# L'ordre compte : Runtime en premier.
+ibm_mq_components:
+  - MQSeriesRuntime
+  - MQSeriesServer
+  - MQSeriesGSKit
+  - MQSeriesClient
+  - MQSeriesMsg_fr
+# Décommenter selon besoin :
+#  - MQSeriesSDK
+#  - MQSeriesSamples
+#  - MQSeriesJava
+#  - MQSeriesJRE
+#  - MQSeriesMan
+
+# --- Utilisateurs / groupes (UID/GID FIXES et homogènes sur le parc) --------
+ibm_mq_mqm_gid: 1010
+ibm_mq_mqm_uid: 1010
+ibm_mq_admmq_uid: 1011
+ibm_mq_users:
+  - { name: mqm, uid: "{{ ibm_mq_mqm_uid }}", group: mqm, primary: true }
+  - { name: admmq, uid: "{{ ibm_mq_admmq_uid }}", group: mqm, primary: false }
+
+# --- Installation primaire --------------------------------------------------
+# false = coexistence multi-versions pilotée par setmqenv + symlink.
+# true  = setmqinst -i -p (crée les liens /usr/bin standard ; une seule
+#         installation primaire possible par serveur).
+ibm_mq_set_primary: false
+
+# --- Limites système (recommandations IBM MQ) -------------------------------
+ibm_mq_nofile_soft: 10240
+ibm_mq_nofile_hard: 10240
+ibm_mq_nproc_soft: 4096
+ibm_mq_nproc_hard: 4096
+
+# --- Dépendances OS ---------------------------------------------------------
+ibm_mq_os_dependencies:
+  - bc
+  - tar
+  - util-linux
+
+# --- SELinux ----------------------------------------------------------------
+ibm_mq_manage_selinux: true
+ibm_mq_selinux_setype: usr_t
+
+# --- Nettoyage --------------------------------------------------------------
+ibm_mq_cleanup: true
